@@ -14,6 +14,8 @@ namespace SrEjercicio1
         static readonly private object l = new object();
         static bool continua = true;
         static bool salir = true;
+        static bool[] tropiezo;
+        //static bool tramposoAle = true;
         static int cabGanador, dinero, numCaballos;
         static int cabApostado = -1;
         static int Monedero = 500;
@@ -23,35 +25,45 @@ namespace SrEjercicio1
         public static void MoveCaballo(object posY)
         {
             int posicionY = (int)posY;
+            bool tropiezoDentroHilo = (bool)tropiezo[posicionY];
             int pasos = 0;
-            while (continua) { 
-
-                if (tamañoCarrera != 1)
+            while (continua)
+            {
+                if (!tropiezoDentroHilo)
                 {
-                    lock (l)
-                    {
-                        Console.SetCursorPosition(pasos, posicionY + 5);
-                        Console.Write("{0,13}", "Horse");
-                    }
 
-                    Thread.Sleep(sueñoAleatorio.Next(1, 600));
-                }
-                if (tamañoCarrera < pasos)
-                {
-                    continua = false;
-                    Console.SetCursorPosition(0, 3);
-                    Console.WriteLine("Gano el caballo " + posicionY + "");
-                    Console.ReadKey();
-                    pasos = 0;
-                    Console.Clear();
-                    lock (l)
+                    if (tamañoCarrera != 1)
                     {
-                        Monitor.Pulse(l);
+                        lock (l)
+                        {
+                            Console.SetCursorPosition(pasos, posicionY + 5);
+                            Console.Write("{0,13}", "Horse");
+                        }
+
+                        Thread.Sleep(sueñoAleatorio.Next(1, 600));
                     }
-                    cabGanador = posicionY;
+                    if (tamañoCarrera < pasos)
+                    {
+                        continua = false;
+                        Console.SetCursorPosition(0, 3);
+                        Console.WriteLine("Gano el caballo " + posicionY + "");
+                        Console.ReadKey();
+                        pasos = 0;
+                        Console.Clear();
+                        lock (l)
+                        {
+                            Monitor.Pulse(l);
+                        }
+                        cabGanador = posicionY;
+                    }
+                    pasos++;
+                    pasos += caminoaleatorio.Next(1, 8);
+                    Trap(tropiezoDentroHilo);
                 }
-                pasos++;
-                pasos += caminoaleatorio.Next(1, 8);
+                else
+                {
+                    Console.WriteLine("Tropezo");
+                }
             }
         }
 
@@ -182,10 +194,10 @@ namespace SrEjercicio1
             }
         }
 
-        public static void Trap(object hilo)
+        public static void Trap(object tropiezo)
         {
-            Thread hiloAle = (Thread)hilo;
-
+            bool tropiezoDentroHilo = (bool)tropiezo;
+            tropiezoDentroHilo = true;
         }
 
         static void Main(string[] args)
@@ -193,16 +205,17 @@ namespace SrEjercicio1
             Program eje1 = new Program();
             while (salir)
             {
-                    eje1.Elecciones(Menu());
+                 //   eje1.Elecciones(Menu());
                     Thread tramposo = new Thread(Trap);
                     Thread[] hilo = new Thread[numCaballos];
+                    tropiezo = new bool[numCaballos];
+                    tramposo.Start();
                     for (int i = 0; i < numCaballos; i++)
                     {
+                        tropiezo[i] = false;
                         hilo[i] = new Thread(MoveCaballo);
                         hilo[i].Start(i);
-                        tramposo.Start(hilo[sueñoAleatorio.Next(0,numCaballos-1)]);
-                        //Trap(hilo[1]);
-                    }
+                }
                 if (salir)
                 {
                     lock (l)
