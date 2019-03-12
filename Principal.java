@@ -15,6 +15,8 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -24,6 +26,7 @@ import javafx.scene.control.RadioButton;
 import javax.sound.midi.SysexMessage;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -81,10 +84,13 @@ public class Principal extends JFrame implements ActionListener {
     }
 
     public void crearLabelsDinamicamente(int numLabels) {
-        int posX = 50;
-        int posY = 0;
+        //Para poner etiqueta como imagen, definimos imageIcon y la usamos en el constructor del label
+        String variableHome = System.getProperty("user.home");
+        ImageIcon image = new ImageIcon(variableHome + "\\Examen\\puerta.jpg");
+        int posX = 5;
+        int posY = 20;
         for (int i = 0; i < numLabels; i++) {
-            lbletiqueta = new JLabel("Etiqueta" + i);
+            lbletiqueta = new JLabel(image);
             //--Ojo al hacer el tamaño por defecto--//
             //etiqueta.setSize(etiqueta.getPreferredSize());
             lbletiqueta.setSize(170, 250);
@@ -140,6 +146,8 @@ public class Principal extends JFrame implements ActionListener {
         mnuItemNuevoJuego = new JMenuItem("Nuevo Juego");
         mnuItemNuevoJuego.setMnemonic('N');
         mnuItemNuevoJuego.addActionListener(this);
+        //LLamar a las funciones de la clase interna ( cuidado con los listener ( de los eventos a los que llamas, tienen que contener la funcion sobrescrita o no funcionaran).
+//        mnuItemNuevoJuego.addMouseListener(new ComponenteVerde());
         mnuOpcion.add(mnuItemNuevoJuego);
         //SeparadorDeItems
         mnuOpcion.addSeparator();
@@ -168,8 +176,11 @@ public class Principal extends JFrame implements ActionListener {
             }
             CaracteristicasFrmVerRecords();
         } else if (e.getSource() == (mnuItemNuevoJuego)) {
+            
+        }else if(e.getSource() == frmVerRecords.Eliminar){
+            frmVerRecords.lista.removeAll();
         }
-        //PONER UTILIDAD AL BOTON DE ELIMINAR
+        //PONER UTILIDAD AL BOTON DE ELIMINAR -- hecho, añadi  el boton al actionperformed de e el if lo hice como una condicion del primer formulario
     }
 
     boolean unaVez = true;
@@ -183,20 +194,26 @@ public class Principal extends JFrame implements ActionListener {
             GuardarDatos();
             //TextField
             frmConfiguracion.txtName = new TextField();
+            frmConfiguracion.txtName.addMouseListener(new ComponenteVerde());
             frmConfiguracion.add(frmConfiguracion.txtName);
             //Combobox
             frmConfiguracion.cmBox = new JComboBox<>(numeros);
             frmConfiguracion.cmBox.setMaximumRowCount(9);
             frmConfiguracion.cmBox.setSelectedIndex(2);
+            frmConfiguracion.cmBox.addMouseListener(new ComponenteVerde());
+            
+            
             frmConfiguracion.add(frmConfiguracion.cmBox);
             //RadioButtons Color 1
 
             frmConfiguracion.rdColor1 = new JRadioButton("Magenta");
             frmConfiguracion.rdColor1.setForeground(Color.MAGENTA);
+            frmConfiguracion.rdColor1.addMouseListener(new ComponenteVerde());
             frmConfiguracion.add(frmConfiguracion.rdColor1);
 
             frmConfiguracion.rdColor2 = new JRadioButton("Naranja");
             frmConfiguracion.rdColor2.setForeground(Color.orange);
+            frmConfiguracion.rdColor2.addMouseListener(new ComponenteVerde());
             frmConfiguracion.add(frmConfiguracion.rdColor2);
             //GroupButton
             frmConfiguracion.gbText = new ButtonGroup();
@@ -210,9 +227,17 @@ public class Principal extends JFrame implements ActionListener {
 
     public void LecturaArchivo() throws FileNotFoundException {
         String directorio = System.getProperty("user.home");
+        PrintWriter pw = new PrintWriter(directorio + "\\Records.txt");
         File f = new File(directorio + "\\Records.txt");
-        if (f.exists()) {
             Scanner sc = new Scanner(f);
+        if (f.exists()) {
+            while (sc.hasNext()) {
+                String frase = sc.nextLine();
+                recordsMatch.addElement(frase);
+            }
+        }
+        else{
+            pw.append("");
             while (sc.hasNext()) {
                 String frase = sc.nextLine();
                 recordsMatch.addElement(frase);
@@ -237,6 +262,7 @@ public class Principal extends JFrame implements ActionListener {
             //JButton EliminarRecords
             frmVerRecords.Eliminar = new JButton("Eliminar");
             frmVerRecords.Eliminar.setBounds(20, 20, 40, 40);
+            frmVerRecords.Eliminar.addActionListener(this);
             frmVerRecords.add(frmVerRecords.Eliminar);
         }
     }
@@ -262,16 +288,16 @@ public class Principal extends JFrame implements ActionListener {
         p.setVisible(true);
     }
 
-    public static class ComponenteVerde extends MouseAdapter { //Duda con clases internas y como llamar a esta funcion dandole un evento
+    public class ComponenteVerde extends MouseAdapter { //Llamamos al listener y en el contructor añadimos (new ComponenteVerde); instanciamos  la clase q contiene las funciones sobrescritas
 
-        public void mostrar() {
-            System.out.println("Hola");
+        @Override
+        public void mouseExited(MouseEvent e) {
+            frmConfiguracion.getContentPane().setBackground(Color.white);
         }
 
         @Override
-        public void mouseMoved(MouseEvent event) {
-            //TODO
-            System.out.println("Mouse movement detected! Actual mouse position is: " + event.getX() + "," + event.getY() + ".");
+        public void mouseEntered(MouseEvent e) {
+            frmConfiguracion.getContentPane().setBackground(Color.green);
         }
     }
 }
